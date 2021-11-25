@@ -75,7 +75,7 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
             state: 'open',
             head: branch
         });
-        core.info(isPrAlreadyExists.toString());
+        core.info(JSON.stringify(isPrAlreadyExists, null, 2));
         core.setOutput('branch', branch);
         core.setOutput('isHotfix', isHotfix);
     });
