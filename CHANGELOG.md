@@ -1,13 +1,6 @@
 achievibit changelog
 
-# [1.1.0-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.1-beta.1...v1.1.0-beta.1) (2021-11-25)
-
-
-### Features
-
-* **readme:** finalize project ([31ed9bf](https://github.com/kibibit/gitflow-hotfix/commit/31ed9bf5232e71c642288f4e6e8dc25b014f8524))
-
-## [1.0.1-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0...v1.0.1-beta.1) (2021-11-25)
+## [1.0.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0...v1.0.1) (2021-11-25)
 
 
 ### Bug Fixes
