@@ -40,14 +40,29 @@ async function openPRIfHotfix(
   const isHotfix = branch.startsWith('hotfix/')
 
   const octokit = getOctokit(githubToken)
-  const isPrAlreadyExists = await octokit.rest.pulls.list({
+  const isPrAlreadyExistsCall = await octokit.rest.pulls.list({
     owner: context.repo.owner,
     repo: context.repo.repo,
     state: 'open',
     head: branch
   })
+  const isPrAlreadyExists = isPrAlreadyExistsCall.data
 
-  core.info(JSON.stringify(isPrAlreadyExists, null, 2))
+  if (isPrAlreadyExists.length === 1) {
+    core.info(`ONE PR exists for ${branch}. Creating the second one...`)
+    // only one exists, this should be the right one!
+    const existingPR = isPrAlreadyExists[0]
+    const createdPR = await octokit.rest.pulls.create({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      head: branch,
+      base: openPrAgainstBranch,
+      title: `[AUTO]${existingPR.title}`,
+      body: existingPR.body as string
+    })
+
+    core.info(JSON.stringify(createdPR, null, 2))
+  }
 
   core.setOutput('branch', branch)
   core.setOutput('isHotfix', isHotfix)

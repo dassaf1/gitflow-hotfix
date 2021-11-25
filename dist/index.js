@@ -69,13 +69,27 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
         const branch = pullRequest.head.ref;
         const isHotfix = branch.startsWith('hotfix/');
         const octokit = (0, github_1.getOctokit)(githubToken);
-        const isPrAlreadyExists = yield octokit.rest.pulls.list({
+        const isPrAlreadyExistsCall = yield octokit.rest.pulls.list({
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
             state: 'open',
             head: branch
         });
-        core.info(JSON.stringify(isPrAlreadyExists, null, 2));
+        const isPrAlreadyExists = isPrAlreadyExistsCall.data;
+        if (isPrAlreadyExists.length === 1) {
+            core.info(`ONE PR exists for ${branch}. Creating the second one...`);
+            // only one exists, this should be the right one!
+            const existingPR = isPrAlreadyExists[0];
+            const createdPR = yield octokit.rest.pulls.create({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                head: branch,
+                base: openPrAgainstBranch,
+                title: `[AUTO]${existingPR.title}`,
+                body: existingPR.body
+            });
+            core.info(JSON.stringify(createdPR, null, 2));
+        }
         core.setOutput('branch', branch);
         core.setOutput('isHotfix', isHotfix);
     });
