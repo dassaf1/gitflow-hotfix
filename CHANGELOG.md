@@ -1,5 +1,12 @@
 achievibit changelog
 
+# [1.0.0-beta.3](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2021-11-25)
+
+
+### Features
+
+* **footer:** add footer for opened PR saying it's generated ([e1f75ad](https://github.com/kibibit/gitflow-hotfix/commit/e1f75ad82d283ad82254bfa0e8ae7804a1a82fb0))
+
 # [1.0.0-beta.2](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2021-11-25)
 
 
