@@ -42,7 +42,7 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, t
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const pullRequest = github_1.context.payload.pull_request;
-        const workflowName = process.env.GITHUB_WORKFLOW;
+        // const workflowName = process.env.GITHUB_WORKFLOW;
         if (!pullRequest) {
             (0, core_1.debug)('No pull request found');
             return;
@@ -68,7 +68,9 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, t
             const existingPR = isPrAlreadyExists[0];
             let prBody = existingPR.body || '';
             prBody += '\n\n-----\n';
-            prBody += `This PR was created automatically by the **${workflowName} GitHub Action**`;
+            prBody += `This HOTFIX PR was created automatically from `;
+            prBody += `[PR #${existingPR.number}](${existingPR.html_url})\n`;
+            prBody += `by [@kibibit/gitflow-hotfix](${existingPR.html_url})`;
             const createdPRCall = yield octokit.rest.pulls.create({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,

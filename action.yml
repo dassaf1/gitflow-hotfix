@@ -1,5 +1,5 @@
-name: 'Create Hotfix 2nd PR'
-description: 'Open second PR if branch is hotfix'
+name: '@kibibit/gitflow-hotfix'
+description: 'Open second PR if branch is hotfix based on gitflow rules'
 author: 'kibibit'
 branding:
   icon: git-pull-request
