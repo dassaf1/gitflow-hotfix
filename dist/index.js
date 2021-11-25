@@ -44,7 +44,12 @@ function run() {
             const githubToken = core.getInput('token');
             const hotfixAgainstBranch = core.getInput('hotfixAgainstBranch');
             const openPrAgainstBranch = core.getInput('openPrAgainstBranch');
-            yield openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch);
+            const labelsInputString = core.getInput('labels') || '';
+            const labels = (labelsInputString
+                ? labelsInputString.split(',')
+                : ['auto-created', 'hotfix']).map(label => label.trim());
+            const titlePrefix = core.getInput('titlePrefix') || '[AUTO]';
+            yield openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, titlePrefix, labels);
         }
         catch (error) {
             if (error instanceof Error)
@@ -52,7 +57,7 @@ function run() {
         }
     });
 }
-function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
+function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, titlePrefix, labels) {
     return __awaiter(this, void 0, void 0, function* () {
         const pullRequest = github_1.context.payload.pull_request;
         core.info(openPrAgainstBranch);
@@ -77,18 +82,29 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
         });
         const isPrAlreadyExists = isPrAlreadyExistsCall.data;
         if (isPrAlreadyExists.length === 1) {
-            core.info(`ONE PR exists for ${branch}. Creating the second one...`);
+            core.info(`ONE PR exists for ${branch}. Creating the second one against ${openPrAgainstBranch}`);
             // only one exists, this should be the right one!
             const existingPR = isPrAlreadyExists[0];
-            const createdPR = yield octokit.rest.pulls.create({
+            const createdPRCall = yield octokit.rest.pulls.create({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
                 head: branch,
                 base: openPrAgainstBranch,
-                title: `[AUTO]${existingPR.title}`,
+                title: `${titlePrefix} ${existingPR.title}`,
                 body: existingPR.body
             });
+            const createdPR = createdPRCall.data;
+            yield octokit.rest.issues.addLabels({
+                owner: github_1.context.repo.owner,
+                issue_number: createdPR.number,
+                repo: github_1.context.repo.repo,
+                labels
+            });
             core.info(JSON.stringify(createdPR, null, 2));
+            core.info(`${createdPR.head.ref} was created`);
+        }
+        else {
+            core.info('More than 1 PR already exists. doing nothing...');
         }
         core.setOutput('branch', branch);
         core.setOutput('isHotfix', isHotfix);

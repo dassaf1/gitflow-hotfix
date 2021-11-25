@@ -8,7 +8,20 @@ async function run(): Promise<void> {
     const githubToken = core.getInput('token')
     const hotfixAgainstBranch = core.getInput('hotfixAgainstBranch')
     const openPrAgainstBranch = core.getInput('openPrAgainstBranch')
-    await openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch)
+    const labelsInputString = core.getInput('labels') || ''
+    const labels = (
+      labelsInputString
+        ? labelsInputString.split(',')
+        : ['auto-created', 'hotfix']
+    ).map(label => label.trim())
+    const titlePrefix = core.getInput('titlePrefix') || '[AUTO]'
+    await openPRIfHotfix(
+      githubToken,
+      hotfixAgainstBranch,
+      openPrAgainstBranch,
+      titlePrefix,
+      labels
+    )
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -17,7 +30,9 @@ async function run(): Promise<void> {
 async function openPRIfHotfix(
   githubToken: string,
   hotfixAgainstBranch: string,
-  openPrAgainstBranch: string
+  openPrAgainstBranch: string,
+  titlePrefix: string,
+  labels: string[]
 ): Promise<void> {
   const pullRequest = context.payload.pull_request
 
@@ -49,19 +64,31 @@ async function openPRIfHotfix(
   const isPrAlreadyExists = isPrAlreadyExistsCall.data
 
   if (isPrAlreadyExists.length === 1) {
-    core.info(`ONE PR exists for ${branch}. Creating the second one...`)
+    core.info(
+      `ONE PR exists for ${branch}. Creating the second one against ${openPrAgainstBranch}`
+    )
     // only one exists, this should be the right one!
     const existingPR = isPrAlreadyExists[0]
-    const createdPR = await octokit.rest.pulls.create({
+    const createdPRCall = await octokit.rest.pulls.create({
       owner: context.repo.owner,
       repo: context.repo.repo,
       head: branch,
       base: openPrAgainstBranch,
-      title: `[AUTO]${existingPR.title}`,
+      title: `${titlePrefix} ${existingPR.title}`,
       body: existingPR.body as string
+    })
+    const createdPR = createdPRCall.data
+    await octokit.rest.issues.addLabels({
+      owner: context.repo.owner,
+      issue_number: createdPR.number,
+      repo: context.repo.repo,
+      labels
     })
 
     core.info(JSON.stringify(createdPR, null, 2))
+    core.info(`${createdPR.head.ref} was created`)
+  } else {
+    core.info('More than 1 PR already exists. doing nothing...')
   }
 
   core.setOutput('branch', branch)

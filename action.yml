@@ -7,13 +7,19 @@ branding:
 inputs:
   token: # change this
     required: true
-    description: 'github token'
+    description: github token to run the action against
   hotfixAgainstBranch:
     required: true
     description: 1st branch (usually master\main)
   openPrAgainstBranch:
     required: true
     description: 2nd branch (usually develop)
+  labels:
+    required: false
+    description: comma separated list of labels to add to the PR
+  titlePrefix:
+    required: false
+    description: title prefix (default is [AUTO])
 runs:
   using: 'node12'
   main: 'dist/index.js'
