@@ -1,5 +1,13 @@
 achievibit changelog
 
+# [1.0.0-beta.4](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2021-11-25)
+
+
+### Features
+
+* **inputs:** added sharedLabels and checkBranchPrefix ([c446fec](https://github.com/kibibit/gitflow-hotfix/commit/c446feca88f131d6afca8004ae32a48d596489eb))
+* **footer:** better info in footer ([0f40f28](https://github.com/kibibit/gitflow-hotfix/commit/0f40f2868ab033903b3b74594f8a4e650bed57d9))
+
 # [1.0.0-beta.3](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2021-11-25)
 
 
