@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import github from '@actions/github'
-import {wait} from './wait'
 
 run()
 
