@@ -1,5 +1,12 @@
 achievibit changelog
 
+## [1.0.1-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0...v1.0.1-beta.1) (2021-11-25)
+
+
+### Bug Fixes
+
+* **footer:** change footer to include url to marketplace ([275c32c](https://github.com/kibibit/gitflow-hotfix/commit/275c32c49195c0d2123431868d12b3c81abbf962))
+
 # 1.0.0 (2021-11-25)
 
 
