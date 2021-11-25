@@ -1,5 +1,5 @@
-name: 'Create Hotfix 2nd PR'
-description: 'Open second PR if branch is hotfix'
+name: '@kibibit/gitflow-hotfix'
+description: 'Open second PR if branch is hotfix based on gitflow rules'
 author: 'kibibit'
 branding:
   icon: git-pull-request
@@ -14,12 +14,18 @@ inputs:
   openPrAgainstBranch:
     required: true
     description: 2nd branch (usually develop)
+  sharedLabels:
+    required: false
+    description: comma separated list of labels to add to BOTH PRs
   labels:
     required: false
     description: comma separated list of labels to add to the PR
   titlePrefix:
     required: false
     description: title prefix (default is [AUTO])
+  checkBranchPrefix:
+    required: false
+    description: prefix to test branch names against (default is 'hotfix/')
 runs:
   using: 'node12'
   main: 'dist/index.js'
