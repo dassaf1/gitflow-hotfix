@@ -1,4 +1,4 @@
-import { debug, getInput, info, setFailed, setOutput } from '@actions/core';
+import { debug, getInput, info, setFailed } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 
 run();
@@ -9,10 +9,17 @@ async function run(): Promise<void> {
     const hotfixAgainstBranch = getInput('hotfixAgainstBranch');
     const openPrAgainstBranch = getInput('openPrAgainstBranch');
     const labelsInputString = getInput('labels') || '';
+    const sharedLabelsInputString = getInput('sharedLabels') || '';
+    const checkBranchPrefix = getInput('checkBranchPrefix') || 'hotfix/';
     const labels = (
       labelsInputString ?
         labelsInputString.split(',') :
-        [ 'auto-created', 'hotfix' ]
+        [ 'auto-created' ]
+    ).map((label) => label.trim());
+    const sharedLabels = (
+      sharedLabelsInputString ?
+      sharedLabelsInputString.split(',') :
+        [ 'hotfix' ]
     ).map((label) => label.trim());
     const titlePrefix = getInput('titlePrefix') || '[AUTO]';
     await openPRIfHotfix(
@@ -20,7 +27,9 @@ async function run(): Promise<void> {
       hotfixAgainstBranch,
       openPrAgainstBranch,
       titlePrefix,
-      labels
+      labels,
+      sharedLabels,
+      checkBranchPrefix
     );
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
@@ -32,7 +41,9 @@ async function openPRIfHotfix(
   hotfixAgainstBranch: string,
   openPrAgainstBranch: string,
   titlePrefix: string,
-  labels: string[]
+  labels: string[],
+  sharedLabels: string[],
+  checkBranchPrefix: string
 ): Promise<void> {
   const pullRequest = context.payload.pull_request;
   // const workflowName = process.env.GITHUB_WORKFLOW;
@@ -43,14 +54,13 @@ async function openPRIfHotfix(
   }
 
   const baseBranch = pullRequest.base.ref as string;
+  const branch = pullRequest.head.ref as string;
+  const isHotfix = branch.startsWith(checkBranchPrefix);
 
-  if (baseBranch !== hotfixAgainstBranch) {
-    debug(`Not a hotfix against ${ hotfixAgainstBranch }`);
+  if (!isHotfix || baseBranch !== hotfixAgainstBranch) {
+    debug(`Not a hotfix against ${ hotfixAgainstBranch }. skipping...`);
     return;
   }
-
-  const branch = pullRequest.head.ref as string;
-  const isHotfix = branch.startsWith('hotfix/');
 
   const octokit = getOctokit(githubToken);
   const isPrAlreadyExistsCall = await octokit.rest.pulls.list({
@@ -67,11 +77,12 @@ async function openPRIfHotfix(
     );
     // only one exists, this should be the right one!
     const existingPR = isPrAlreadyExists[0];
-    let prBody = existingPR.body || '';
-    prBody += '\n\n-----\n';
-    prBody += `This HOTFIX PR was created automatically from `;
-    prBody += `[PR #${ existingPR.number }](${ existingPR.html_url })\n`;
-    prBody += `by [@kibibit/gitflow-hotfix](${ existingPR.html_url })`;
+    const prFooter = [
+      'This HOTFIX PR was created automatically from ',
+      `[PR #${ existingPR.number }](${ existingPR.html_url })\n`,
+      `by [gitflow-hotfix](${ existingPR.html_url })`
+    ].join('');
+    const prBody = addPRBodyFooter(existingPR.body, prFooter);
     const createdPRCall = await octokit.rest.pulls.create({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -91,14 +102,25 @@ async function openPRIfHotfix(
       owner: context.repo.owner,
       issue_number: createdPR.number,
       repo: context.repo.repo,
-      labels
+      labels: [ ...sharedLabels, ...labels ]
+    });
+    await octokit.rest.issues.addLabels({
+      owner: context.repo.owner,
+      issue_number: existingPR.number,
+      repo: context.repo.repo,
+      labels: [ ...sharedLabels ]
     });
 
     info(`${ createdPR.head.ref } was created`);
   } else {
     info('More than 1 PR already exists. doing nothing...');
   }
+}
 
-  setOutput('branch', branch);
-  setOutput('isHotfix', isHotfix);
+function addPRBodyFooter(body: string | null, footer: string) {
+  let prBody = body || '';
+  prBody += '\n\n-----\n';
+  prBody += footer;
+
+  return prBody;
 }
