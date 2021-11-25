@@ -8,6 +8,12 @@ inputs:
   token: # change this
     required: true
     description: 'github token'
+  hotfixAgainstBranch:
+    required: true
+    description: 1st branch (usually master\main)
+  openPrAgainstBranch:
+    required: true
+    description: 2nd branch (usually develop)
 runs:
   using: 'node12'
   main: 'dist/index.js'

@@ -7,14 +7,23 @@ run()
 async function run(): Promise<void> {
   try {
     const githubToken = core.getInput('token')
-    await openPRIfHotfix(githubToken)
+    const hotfixAgainstBranch = core.getInput('hotfixAgainstBranch')
+    const openPrAgainstBranch = core.getInput('openPrAgainstBranch')
+    await openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
 
-async function openPRIfHotfix(githubToken: string): Promise<void> {
+async function openPRIfHotfix(
+  githubToken: string,
+  hotfixAgainstBranch: string,
+  openPrAgainstBranch: string
+): Promise<void> {
   const pullRequest = github.context.payload.pull_request
+
+  core.info(openPrAgainstBranch)
+  core.info(hotfixAgainstBranch)
 
   if (!pullRequest) {
     core.debug('No pull request found')
@@ -22,6 +31,12 @@ async function openPRIfHotfix(githubToken: string): Promise<void> {
   }
 
   const baseBranch = pullRequest.base.ref as string
+
+  if (baseBranch !== hotfixAgainstBranch) {
+    core.debug(`Not a hotfix against ${hotfixAgainstBranch}`)
+    return
+  }
+
   const branch = pullRequest.head.ref as string
   const isHotfix = branch.startsWith('hotfix/')
 
@@ -30,8 +45,7 @@ async function openPRIfHotfix(githubToken: string): Promise<void> {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     state: 'open',
-    head: branch,
-    base: baseBranch
+    head: branch
   })
 
   core.info(isPrAlreadyExists.toString())
