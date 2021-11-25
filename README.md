@@ -5,8 +5,12 @@
   </h2>
 </p>
 <p align="center">
+  <a href="https://github.com/Kibibit/gitflow-hotfix/releases"><img src="https://img.shields.io/github/v/release/kibibit/gitflow-hotfix?style=for-the-badge&logo=github&label=github@latest&color=2088FF"></a>
 </p>
 <p align="center">
+  <a href="https://github.com/Kibibit/gitflow-hotfix/releases">
+    <img src="https://img.shields.io/github/v/release/kibibit/gitflow-hotfix?color=2088FF&style=flat-square&logo=github&label=github@beta&include_prereleases">
+  </a>
  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 <a href="#contributors-"><img src="https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square" alt="All Contributors"></a>
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
@@ -17,7 +21,26 @@
 </p>
 <hr>
 
+## Usage
+```yaml
+name: Auto Hotfix If Needed
 
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Auto Hotfix If Needed
+        uses: Kibibit/gitflow-hotfix@v1.0.0
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          hotfixAgainstBranch: main
+          openPrAgainstBranch: beta
+```
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -37,7 +60,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome!
 
-<div>Logo made by <a href="https://www.flaticon.com/authors/good-ware" title="Good Ware">Good Ware</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+<div>Logo made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 <br>
 
 ## Stay in touch
