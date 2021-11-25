@@ -1,6 +1,9 @@
 name: 'Create Hotfix 2nd PR'
 description: 'Open second PR if branch is hotfix'
 author: 'kibibit'
+branding:
+  icon: git-pull-request
+  color: yellow
 inputs:
   token: # change this
     required: true
