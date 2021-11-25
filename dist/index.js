@@ -34,12 +34,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const github_1 = __importDefault(__nccwpck_require__(5438));
+const github_1 = __nccwpck_require__(5438);
 run();
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -57,7 +54,7 @@ function run() {
 }
 function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pullRequest = github_1.default.context.payload.pull_request;
+        const pullRequest = github_1.context.payload.pull_request;
         core.info(openPrAgainstBranch);
         core.info(hotfixAgainstBranch);
         if (!pullRequest) {
@@ -71,10 +68,10 @@ function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch) {
         }
         const branch = pullRequest.head.ref;
         const isHotfix = branch.startsWith('hotfix/');
-        const octokit = github_1.default.getOctokit(githubToken);
+        const octokit = (0, github_1.getOctokit)(githubToken);
         const isPrAlreadyExists = yield octokit.rest.pulls.list({
-            owner: github_1.default.context.repo.owner,
-            repo: github_1.default.context.repo.repo,
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
             state: 'open',
             head: branch
         });
