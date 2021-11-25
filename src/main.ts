@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
+import {context, getOctokit} from '@actions/github'
 
 run()
 
@@ -19,7 +19,7 @@ async function openPRIfHotfix(
   hotfixAgainstBranch: string,
   openPrAgainstBranch: string
 ): Promise<void> {
-  const pullRequest = github.context.payload.pull_request
+  const pullRequest = context.payload.pull_request
 
   core.info(openPrAgainstBranch)
   core.info(hotfixAgainstBranch)
@@ -39,10 +39,10 @@ async function openPRIfHotfix(
   const branch = pullRequest.head.ref as string
   const isHotfix = branch.startsWith('hotfix/')
 
-  const octokit = github.getOctokit(githubToken)
+  const octokit = getOctokit(githubToken)
   const isPrAlreadyExists = await octokit.rest.pulls.list({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
     state: 'open',
     head: branch
   })
