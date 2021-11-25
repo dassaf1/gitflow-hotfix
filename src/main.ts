@@ -35,6 +35,7 @@ async function openPRIfHotfix(
   labels: string[]
 ): Promise<void> {
   const pullRequest = context.payload.pull_request;
+  const workflowName = process.env.GITHUB_WORKFLOW;
 
   if (!pullRequest) {
     debug('No pull request found');
@@ -66,15 +67,24 @@ async function openPRIfHotfix(
     );
     // only one exists, this should be the right one!
     const existingPR = isPrAlreadyExists[0];
+    let prBody = existingPR.body || '';
+    prBody += '\n\n-----\n';
+    prBody += `This PR was created automatically by the **${ workflowName } GitHub Action**`;
     const createdPRCall = await octokit.rest.pulls.create({
       owner: context.repo.owner,
       repo: context.repo.repo,
       head: branch,
       base: openPrAgainstBranch,
       title: `${ titlePrefix } ${ existingPR.title }`,
-      body: existingPR.body as string
+      body: prBody
     });
     const createdPR = createdPRCall.data;
+    await octokit.rest.issues.addAssignees({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: createdPR.number,
+      assignees: existingPR.user?.login ? [ existingPR.user.login ] : []
+    });
     await octokit.rest.issues.addLabels({
       owner: context.repo.owner,
       issue_number: createdPR.number,
