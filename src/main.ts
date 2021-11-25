@@ -79,8 +79,8 @@ async function openPRIfHotfix(
     const existingPR = isPrAlreadyExists[0];
     const prFooter = [
       'This HOTFIX PR was created automatically from ',
-      `[PR #${ existingPR.number }](${ existingPR.html_url })\n`,
-      `by [gitflow-hotfix](${ existingPR.html_url })`
+      `[PR #${ existingPR.number }](${ existingPR.html_url }) `,
+      `by [gitflow-hotfix](https://github.com/marketplace/actions/kibibit-gitflow-hotfix)`
     ].join('');
     const prBody = addPRBodyFooter(existingPR.body, prFooter);
     const createdPRCall = await octokit.rest.pulls.create({
