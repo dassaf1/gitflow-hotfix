@@ -1,5 +1,12 @@
 achievibit changelog
 
+## [1.1.1-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.1.0...v1.1.1-beta.1) (2021-11-26)
+
+
+### Bug Fixes
+
+* **action:** fix checking for open prs ([88247e6](https://github.com/kibibit/gitflow-hotfix/commit/88247e695cda78dabec5968f0da6d41b712bc9ae))
+
 # [1.1.0](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.1...v1.1.0) (2021-11-25)
 
 
