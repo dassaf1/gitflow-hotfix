@@ -1,5 +1,12 @@
 achievibit changelog
 
+# [1.2.0-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.1.1-beta.1...v1.2.0-beta.1) (2021-11-26)
+
+
+### Features
+
+* **status:** add a dedicated status with an understandable description ([72ec3c5](https://github.com/kibibit/gitflow-hotfix/commit/72ec3c55d8d8a8a4c0fb9ba7316d371dc72cb0df))
+
 ## [1.1.1-beta.1](https://github.com/kibibit/gitflow-hotfix/compare/v1.1.0...v1.1.1-beta.1) (2021-11-26)
 
 
