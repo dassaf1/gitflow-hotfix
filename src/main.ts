@@ -39,6 +39,7 @@ async function run(): Promise<void> {
 
     await githubCommunicator.openPRIfHotfix();
   } catch (error) {
+    // should have reported on status already
     if (error instanceof Error) setFailed(error.message);
   }
 }

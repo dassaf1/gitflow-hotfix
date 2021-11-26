@@ -226,6 +226,7 @@ function run() {
             yield githubCommunicator.openPRIfHotfix();
         }
         catch (error) {
+            // should have reported on status already
             if (error instanceof Error)
                 (0, core_1.setFailed)(error.message);
         }
