@@ -1,6 +1,169 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 1270:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GithubCommunicator = exports.StatusMessage = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+var StatusMessage;
+(function (StatusMessage) {
+    StatusMessage["PENDING"] = "Checking if hotfix branch";
+    StatusMessage["NOT_HOTFIX"] = "Not a hotfix";
+    StatusMessage["CREATING_PR"] = "Creating PR";
+    StatusMessage["PR_CREATED"] = "PR created";
+    StatusMessage["ALREADY_EXISTS"] = "PR already exists";
+    StatusMessage["ERROR"] = "Something went wrong";
+})(StatusMessage = exports.StatusMessage || (exports.StatusMessage = {}));
+class GithubCommunicator {
+    constructor(options) {
+        this.statusCheckName = 'gitflow-hotfix';
+        this.options = options;
+        this.context = options.context;
+        this.octokit = (0, github_1.getOctokit)(this.options.githubToken);
+    }
+    openPRIfHotfix() {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const pullRequest = this.context.payload.pull_request;
+            (0, core_1.debug)(`pullRequest: ${JSON.stringify(pullRequest)}`);
+            const workflowName = process.env.GITHUB_WORKFLOW;
+            (0, core_1.debug)(`workflowName: ${workflowName}`);
+            if (!pullRequest) {
+                (0, core_1.debug)('No pull request found');
+                return;
+            }
+            yield this.setStatus({
+                label: this.statusCheckName,
+                currentStatus: StatusMessage.PENDING,
+                state: 'pending'
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }, pullRequest);
+            const baseBranch = pullRequest.base.ref;
+            const branch = pullRequest.head.ref;
+            const isHotfix = branch.startsWith(this.options.checkBranchPrefix);
+            if (!isHotfix || baseBranch !== this.options.hotfixAgainstBranch) {
+                (0, core_1.info)(`Not a hotfix against ${this.options.hotfixAgainstBranch}. skipping...`);
+                yield this.setStatus({
+                    label: this.statusCheckName,
+                    currentStatus: StatusMessage.NOT_HOTFIX,
+                    state: 'success'
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, pullRequest);
+                return;
+            }
+            const isPrAlreadyExistsCall = yield this.octokit.rest.pulls.list({
+                owner: this.context.repo.owner,
+                repo: this.context.repo.repo,
+                state: 'open',
+                head: `${this.context.repo.owner}:${branch}`
+            });
+            const isPrAlreadyExists = isPrAlreadyExistsCall.data;
+            // if only 1 exists, it will always be the one
+            // at the first place in the array
+            const existingPR = isPrAlreadyExists[0];
+            if (isPrAlreadyExists.length === 1) {
+                (0, core_1.info)(`ONE open PR exists for ${branch}. Creating the second one against ${this.options.openPrAgainstBranch}`);
+                yield this.setStatus({
+                    label: this.statusCheckName,
+                    currentStatus: StatusMessage.CREATING_PR,
+                    state: 'pending'
+                }, existingPR);
+                const prFooter = [
+                    'This HOTFIX PR was created automatically from ',
+                    `[PR #${existingPR.number}](${existingPR.html_url}) `,
+                    `by [gitflow-hotfix](https://github.com/marketplace/actions/kibibit-gitflow-hotfix)`
+                ].join('');
+                const prBody = this.addPRBodyFooter(existingPR.body, prFooter);
+                const createdPRCall = yield this.octokit.rest.pulls.create({
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    head: branch,
+                    base: this.options.openPrAgainstBranch,
+                    title: `${this.options.titlePrefix} ${existingPR.title}`,
+                    body: prBody
+                });
+                const createdPR = createdPRCall.data;
+                yield this.octokit.rest.issues.addAssignees({
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    issue_number: createdPR.number,
+                    assignees: ((_a = existingPR.user) === null || _a === void 0 ? void 0 : _a.login) ? [existingPR.user.login] : []
+                });
+                yield this.octokit.rest.issues.addLabels({
+                    owner: this.context.repo.owner,
+                    issue_number: createdPR.number,
+                    repo: this.context.repo.repo,
+                    labels: [...this.options.sharedLabels, ...this.options.labels]
+                });
+                yield this.octokit.rest.issues.addLabels({
+                    owner: this.context.repo.owner,
+                    issue_number: existingPR.number,
+                    repo: this.context.repo.repo,
+                    labels: [...this.options.sharedLabels]
+                });
+                (0, core_1.info)(`${createdPR.head.ref} was created`);
+                yield this.setStatus({
+                    label: this.statusCheckName,
+                    currentStatus: StatusMessage.PR_CREATED,
+                    state: 'success'
+                }, existingPR);
+            }
+            else {
+                (0, core_1.info)('More than 1 PR already exists. doing nothing...');
+                yield this.setStatus({
+                    label: this.statusCheckName,
+                    currentStatus: StatusMessage.ALREADY_EXISTS,
+                    state: 'success'
+                }, existingPR);
+            }
+        });
+    }
+    addPRBodyFooter(body, footer) {
+        let prBody = body || '';
+        prBody += '\n\n-----\n';
+        prBody += footer;
+        return prBody;
+    }
+    setStatus(params, pr) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.octokit.rest.repos.createCommitStatus({
+                    context: params.label,
+                    description: params.currentStatus,
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    sha: pr.head.sha,
+                    state: params.state,
+                    target_url: ''
+                });
+                (0, core_1.info)(`Updated build status: ${params.currentStatus}`);
+            }
+            catch (error) {
+                const errorMessage = (error instanceof Error ? error.message : error);
+                throw new Error(`error while setting context status: ${errorMessage}`);
+            }
+        });
+    }
+}
+exports.GithubCommunicator = GithubCommunicator;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -18,9 +181,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const github_communicator_1 = __nccwpck_require__(1270);
 run();
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        let githubCommunicator;
         try {
             const githubToken = (0, core_1.getInput)('token');
             const hotfixAgainstBranch = (0, core_1.getInput)('hotfixAgainstBranch');
@@ -35,87 +200,23 @@ function run() {
                 sharedLabelsInputString.split(',') :
                 ['hotfix']).map((label) => label.trim());
             const titlePrefix = (0, core_1.getInput)('titlePrefix') || '[AUTO]';
-            yield openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, titlePrefix, labels, sharedLabels, checkBranchPrefix);
+            githubCommunicator = new github_communicator_1.GithubCommunicator({
+                githubToken,
+                hotfixAgainstBranch,
+                openPrAgainstBranch,
+                titlePrefix,
+                labels,
+                sharedLabels,
+                checkBranchPrefix,
+                context: github_1.context
+            });
+            yield githubCommunicator.openPRIfHotfix();
         }
         catch (error) {
             if (error instanceof Error)
                 (0, core_1.setFailed)(error.message);
         }
     });
-}
-function openPRIfHotfix(githubToken, hotfixAgainstBranch, openPrAgainstBranch, titlePrefix, labels, sharedLabels, checkBranchPrefix) {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        const pullRequest = github_1.context.payload.pull_request;
-        // const workflowName = process.env.GITHUB_WORKFLOW;
-        if (!pullRequest) {
-            (0, core_1.debug)('No pull request found');
-            return;
-        }
-        const baseBranch = pullRequest.base.ref;
-        const branch = pullRequest.head.ref;
-        const isHotfix = branch.startsWith(checkBranchPrefix);
-        if (!isHotfix || baseBranch !== hotfixAgainstBranch) {
-            (0, core_1.debug)(`Not a hotfix against ${hotfixAgainstBranch}. skipping...`);
-            return;
-        }
-        const octokit = (0, github_1.getOctokit)(githubToken);
-        const isPrAlreadyExistsCall = yield octokit.rest.pulls.list({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            state: 'open',
-            head: `${github_1.context.repo.owner}:${branch}`
-        });
-        const isPrAlreadyExists = isPrAlreadyExistsCall.data;
-        if (isPrAlreadyExists.length === 1) {
-            (0, core_1.info)(`ONE open PR exists for ${branch}. Creating the second one against ${openPrAgainstBranch}`);
-            // only one exists, this should be the right one!
-            const existingPR = isPrAlreadyExists[0];
-            const prFooter = [
-                'This HOTFIX PR was created automatically from ',
-                `[PR #${existingPR.number}](${existingPR.html_url}) `,
-                `by [gitflow-hotfix](https://github.com/marketplace/actions/kibibit-gitflow-hotfix)`
-            ].join('');
-            const prBody = addPRBodyFooter(existingPR.body, prFooter);
-            const createdPRCall = yield octokit.rest.pulls.create({
-                owner: github_1.context.repo.owner,
-                repo: github_1.context.repo.repo,
-                head: branch,
-                base: openPrAgainstBranch,
-                title: `${titlePrefix} ${existingPR.title}`,
-                body: prBody
-            });
-            const createdPR = createdPRCall.data;
-            yield octokit.rest.issues.addAssignees({
-                owner: github_1.context.repo.owner,
-                repo: github_1.context.repo.repo,
-                issue_number: createdPR.number,
-                assignees: ((_a = existingPR.user) === null || _a === void 0 ? void 0 : _a.login) ? [existingPR.user.login] : []
-            });
-            yield octokit.rest.issues.addLabels({
-                owner: github_1.context.repo.owner,
-                issue_number: createdPR.number,
-                repo: github_1.context.repo.repo,
-                labels: [...sharedLabels, ...labels]
-            });
-            yield octokit.rest.issues.addLabels({
-                owner: github_1.context.repo.owner,
-                issue_number: existingPR.number,
-                repo: github_1.context.repo.repo,
-                labels: [...sharedLabels]
-            });
-            (0, core_1.info)(`${createdPR.head.ref} was created`);
-        }
-        else {
-            (0, core_1.info)('More than 1 PR already exists. doing nothing...');
-        }
-    });
-}
-function addPRBodyFooter(body, footer) {
-    let prBody = body || '';
-    prBody += '\n\n-----\n';
-    prBody += footer;
-    return prBody;
 }
 
 
