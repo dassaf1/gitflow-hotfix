@@ -67,7 +67,7 @@ async function openPRIfHotfix(
     owner: context.repo.owner,
     repo: context.repo.repo,
     state: 'open',
-    head: branch
+    head: `${ context.repo.owner }:${ branch }`
   });
   const isPrAlreadyExists = isPrAlreadyExistsCall.data;
 
