@@ -1,5 +1,12 @@
 achievibit changelog
 
+# [1.0.0-beta.2](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2022-05-26)
+
+
+### Features
+
+* **merge:** remove test that pr already exists ([ea31fca](https://github.com/kibibit/gitflow-hotfix/commit/ea31fca074b92416d7c709d33d9b7650d6ed677a))
+
 # 1.0.0-beta.1 (2021-11-26)
 
 
