@@ -169,14 +169,14 @@ export class GithubCommunicator {
     }
   }
 
-  async mergePR(pull_number: number) {
+  async mergePR(pullNumber: number) {
     try {
       await this.octokit.rest.pulls.merge({
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        pull_number: pull_number
+        pullNumber: pullNumber
       });
-      info(`Merged PR number: ${ pull_number }`);
+      info(`Merged PR number: ${ pullNumber }`);
     } catch (error) {
       const errorMessage = (error instanceof Error ? error.message : error);
       throw new Error(`error while merging PR: ${ errorMessage }`);
