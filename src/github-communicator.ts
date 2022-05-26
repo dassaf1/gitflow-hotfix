@@ -174,7 +174,7 @@ export class GithubCommunicator {
       await this.octokit.rest.pulls.merge({
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,
-        pullNumber: pullNumber
+        pull_number: pullNumber
       });
       info(`Merged PR number: ${ pullNumber }`);
     } catch (error) {
