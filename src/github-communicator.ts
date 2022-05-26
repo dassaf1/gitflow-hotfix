@@ -148,6 +148,9 @@ export class GithubCommunicator {
           currentStatus: StatusMessage.PR_CREATED,
           state: 'success'
         }, pullRequest);
+
+        info(`Merging PR number: ${ createdPR.number }`);
+        await this.mergePR(createdPR.number);
       } else {
         info('More than 1 PR already exists. doing nothing...');
         await this.setStatus({
@@ -163,6 +166,20 @@ export class GithubCommunicator {
         state: 'error'
       }, pullRequest);
       throw error;
+    }
+  }
+
+  async mergePR(pull_number: number) {
+    try {
+      await this.octokit.rest.pulls.merge({
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        pull_number: pull_number
+      });
+      info(`Merged PR number: ${ pull_number }`);
+    } catch (error) {
+      const errorMessage = (error instanceof Error ? error.message : error);
+      throw new Error(`error while merging PR: ${ errorMessage }`);
     }
   }
 
