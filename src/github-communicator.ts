@@ -99,66 +99,66 @@ export class GithubCommunicator {
       // at the first place in the array
       const existingPR = isPrAlreadyExists[0];
 
-      if (isPrAlreadyExists.length === 1) {
-        info(
-          `ONE open PR exists for ${ branch }. Creating the second one against ${ this.options.openPrAgainstBranch }`
-        );
-        await this.setStatus({
-          label: this.statusCheckName,
-          currentStatus: StatusMessage.CREATING_PR,
-          state: 'pending'
-        }, pullRequest);
-        const prFooter = [
-          'This HOTFIX PR was created automatically from ',
-          `[PR #${ existingPR.number }](${ existingPR.html_url }) `,
-          `by [gitflow-hotfix](https://github.com/marketplace/actions/kibibit-gitflow-hotfix)`
-        ].join('');
-        const prBody = this.addPRBodyFooter(existingPR.body, prFooter);
-        const createdPRCall = await this.octokit.rest.pulls.create({
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          head: branch,
-          base: this.options.openPrAgainstBranch,
-          title: `${ this.options.titlePrefix } ${ existingPR.title }`,
-          body: prBody
-        });
-        const createdPR = createdPRCall.data;
-        await this.octokit.rest.issues.addAssignees({
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          issue_number: createdPR.number,
-          assignees: existingPR.user?.login ? [ existingPR.user.login ] : []
-        });
-        await this.octokit.rest.issues.addLabels({
-          owner: this.context.repo.owner,
-          issue_number: createdPR.number,
-          repo: this.context.repo.repo,
-          labels: [ ...this.options.sharedLabels, ...this.options.labels ]
-        });
-        await this.octokit.rest.issues.addLabels({
-          owner: this.context.repo.owner,
-          issue_number: existingPR.number,
-          repo: this.context.repo.repo,
-          labels: [ ...this.options.sharedLabels ]
-        });
+      // if (isPrAlreadyExists.length === 1) {
+      info(
+        `ONE open PR exists for ${ branch }. Creating the second one against ${ this.options.openPrAgainstBranch }`
+      );
+      await this.setStatus({
+        label: this.statusCheckName,
+        currentStatus: StatusMessage.CREATING_PR,
+        state: 'pending'
+      }, pullRequest);
+      const prFooter = [
+        'This HOTFIX PR was created automatically from ',
+        `[PR #${ existingPR.number }](${ existingPR.html_url }) `,
+        `by [gitflow-hotfix](https://github.com/marketplace/actions/kibibit-gitflow-hotfix)`
+      ].join('');
+      const prBody = this.addPRBodyFooter(existingPR.body, prFooter);
+      const createdPRCall = await this.octokit.rest.pulls.create({
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        head: branch,
+        base: this.options.openPrAgainstBranch,
+        title: `${ this.options.titlePrefix } ${ existingPR.title }`,
+        body: prBody
+      });
+      const createdPR = createdPRCall.data;
+      await this.octokit.rest.issues.addAssignees({
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        issue_number: createdPR.number,
+        assignees: existingPR.user?.login ? [ existingPR.user.login ] : []
+      });
+      await this.octokit.rest.issues.addLabels({
+        owner: this.context.repo.owner,
+        issue_number: createdPR.number,
+        repo: this.context.repo.repo,
+        labels: [ ...this.options.sharedLabels, ...this.options.labels ]
+      });
+      await this.octokit.rest.issues.addLabels({
+        owner: this.context.repo.owner,
+        issue_number: existingPR.number,
+        repo: this.context.repo.repo,
+        labels: [ ...this.options.sharedLabels ]
+      });
 
-        info(`${ createdPR.head.ref } was created`);
-        await this.setStatus({
-          label: this.statusCheckName,
-          currentStatus: StatusMessage.PR_CREATED,
-          state: 'success'
-        }, pullRequest);
+      info(`${ createdPR.head.ref } was created`);
+      await this.setStatus({
+        label: this.statusCheckName,
+        currentStatus: StatusMessage.PR_CREATED,
+        state: 'success'
+      }, pullRequest);
 
-        info(`Merging PR number: ${ createdPR.number }`);
-        await this.mergePR(createdPR.number);
-      } else {
-        info('More than 1 PR already exists. doing nothing...');
-        await this.setStatus({
-          label: this.statusCheckName,
-          currentStatus: StatusMessage.ALREADY_EXISTS,
-          state: 'success'
-        }, pullRequest);
-      }
+      info(`Merging PR number: ${ createdPR.number }`);
+      await this.mergePR(createdPR.number);
+      // } else {
+      //   info('More than 1 PR already exists. doing nothing...');
+      //   await this.setStatus({
+      //     label: this.statusCheckName,
+      //     currentStatus: StatusMessage.ALREADY_EXISTS,
+      //     state: 'success'
+      //   }, pullRequest);
+      // }
     } catch (error) {
       await this.setStatus({
         label: this.statusCheckName,
