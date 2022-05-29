@@ -72,7 +72,7 @@ class GithubCommunicator {
                 const isPrAlreadyExistsCall = yield this.octokit.rest.pulls.list({
                     owner: this.context.repo.owner,
                     repo: this.context.repo.repo,
-                    state: 'open',
+                    state: 'closed',
                     head: `${this.context.repo.owner}:${branch}`
                 });
                 const isPrAlreadyExists = isPrAlreadyExistsCall.data;

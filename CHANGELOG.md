@@ -1,5 +1,12 @@
 achievibit changelog
 
+# [1.0.0-beta.3](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2022-05-29)
+
+
+### Bug Fixes
+
+* **app:** make sure pr is closed before opening a new one ([faec902](https://github.com/kibibit/gitflow-hotfix/commit/faec9026d7e67997fefa6a1f78f14e984b8f31a8))
+
 # [1.0.0-beta.2](https://github.com/kibibit/gitflow-hotfix/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2022-05-26)
 
 
