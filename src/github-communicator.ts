@@ -9,6 +9,8 @@ export enum StatusMessage {
   PR_CREATED = 'PR created',
   ALREADY_EXISTS = 'PR already exists',
   ERROR = 'Something went wrong',
+  WAIT_FOR_PR_CHECKS = 'Waiting for PR status checks to complete',
+  PR_CHECKS_COMPLETED = 'All PR checks are completed'
 }
 
 export interface IGithubInput {
@@ -149,6 +151,33 @@ export class GithubCommunicator {
         state: 'success'
       }, pullRequest);
 
+      info('Waiting for PR checks to complete before merging');
+      await this.setStatus({
+        label: this.statusCheckName,
+        currentStatus: StatusMessage.WAIT_FOR_PR_CHECKS,
+        state: 'pending'
+      }, pullRequest);
+
+      let prChecks; let prChecksCompleted;
+      while (true) {
+        // eslint-disable-next-line no-await-in-loop
+        prChecks = await this.getPRChecks(pullRequest.head.sha);
+        prChecksCompleted = prChecks.data
+          .check_runs.every((prCheck) => prCheck.status === 'completed');
+        if (prChecksCompleted) {
+          break;
+        }
+        // eslint-disable-next-line no-await-in-loop
+        await this.wait(60 * 1000);
+      }
+
+      info('All PR checks are completed');
+      await this.setStatus({
+        label: this.statusCheckName,
+        currentStatus: StatusMessage.PR_CHECKS_COMPLETED,
+        state: 'success'
+      }, pullRequest);
+
       info(`Merging PR number: ${ createdPR.number }`);
       await this.mergePR(createdPR.number);
       // } else {
@@ -166,6 +195,21 @@ export class GithubCommunicator {
         state: 'error'
       }, pullRequest);
       throw error;
+    }
+  }
+
+  async getPRChecks(ref: string) {
+    // ref can be a SHA, branch name, or a tag name.
+    try {
+      const prChecks = await this.octokit.rest.checks.listForRef({
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        ref: ref
+      });
+      return prChecks;
+    } catch (error) {
+      const errorMessage = (error instanceof Error ? error.message : error);
+      throw new Error(`error while getting PR checks: ${ errorMessage }`);
     }
   }
 
@@ -207,5 +251,11 @@ export class GithubCommunicator {
       const errorMessage = (error instanceof Error ? error.message : error);
       throw new Error(`error while setting context status: ${ errorMessage }`);
     }
+  }
+
+  async wait(ms: number) {
+    return await new Promise((resolve) => {
+      setTimeout(() => resolve(true), ms);
+    });
   }
 }
